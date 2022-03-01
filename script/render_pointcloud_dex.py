@@ -1564,6 +1564,7 @@ if __name__ == "__main__":
     parser.add_argument('--splits','--list', nargs='+')
     parser.add_argument('--max_iterations', type=int, default=100)
     parser.add_argument('--gripper_path', type=str, default='scripts/grippers/robotiq_85/gripper.obj')
+    parser.add_argument('--config_path', type=str, default='scripts/scene.yaml')
     parser.add_argument('--min_num_objects', type=int, default=1)
     parser.add_argument('--max_num_objects', type=int, default=1)
     parser.add_argument('--start_index', type=int, default=0)
@@ -1584,7 +1585,7 @@ if __name__ == "__main__":
     load_existing = args.load_existing
     output_dir = args.output_dir
     visualize = args.vis
-    config_path = "/home/ymxlzgy/code/DA2dataset/scripts/scene.yaml"
+    config_path = args.config_path
     grasp_used_path = os.path.join(root_folder, args.grasps_used)
     if not os.path.isdir(grasp_used_path):
         os.mkdir(grasp_used_path)
@@ -1666,6 +1667,11 @@ if __name__ == "__main__":
 
                 table_scene.visualize_dual(pcreader, cam1_pose, cam2_pose, scene_grasps)
             table_scene._scene_count +=1
+
+
+
+
+
 
 
 
