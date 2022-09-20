@@ -1,0 +1,331 @@
+# Grasping params (relative paths for gripper_dir and cache_dir are resolved relative to dex-net root)
+gripper_dir: data/dex_grippers
+cache_dir: .dexnet
+
+grasp_sampler: mesh_antipodal
+target_num_grasps: 2000
+num_grasp_rots: 16
+grasp_dist_thresh: 0.0025
+grasp_dist_alpha: 0.005
+grasp_gen_mult: 2
+num_cone_faces: 8
+sampling_friction_coef: 0.4
+sampling_friction_coef_inc: 0.1
+max_grasp_sampling_iters: 10
+max_num_surface_points: 6000
+grasp_samples_per_surface_point: 2
+min_contact_dist: 0.0000
+check_collisions: 1
+delete_previous_metrics: 0
+coll_check_num_grasp_rots: 20
+
+max_stable_poses: 100
+
+approach_dist: 0.05
+delta_approach: 0.005
+
+# Object gen params
+generate_sdf: 1
+path_to_sdfgen: SDFGen
+sdf_dim: 100
+sdf_padding: 5
+stp_min_prob: 0.01
+
+use_default_mass: 1
+default_mass: 1.0
+obj_density: 4000.0 
+
+use_uniform_com: 1
+
+rescale_objects: 1
+obj_target_scale: 1.0
+obj_scaling_mode: relative
+
+# Visualization params
+show_gripper: False
+max_plot_gripper: 500
+min_metric: 0
+table_extent: 0.15
+animate: True
+
+# Metric params
+quality_scale: 0.3
+metric_display_rate: 1
+gravity_accel: 9.81
+
+# Object export params
+export_format: obj
+export_scale: 1.0
+export_overwrite: True
+
+# Metric params
+metrics:
+  robust_ferrari_canny:
+    # required parameters
+    quality_method: ferrari_canny_L1
+    friction_coef: 0.5
+    num_cone_faces: 3
+    soft_fingers: 1
+    quality_type: robust_quasi_static
+    all_contacts_required: 1
+    check_approach: 0
+    use_trimesh_contacts: 1
+    vis: 0
+    
+    # optional deterministic parameters
+    torque_scaling: 100.0
+    wrench_norm_thresh: 0.001
+    wrench_regularizer: 0.0000000001
+
+    # PARAMS for robust grasp metrics
+    # uncertainty
+    grasp_uncertainty:
+      sigma_grasp_trans_x: 0.0025
+      sigma_grasp_trans_y: 0.0025
+      sigma_grasp_trans_z: 0.0025
+      sigma_grasp_rot_x: 0.01
+      sigma_grasp_rot_y: 0.01
+      sigma_grasp_rot_z: 0.01
+      sigma_grasp_approach: 0.01
+      num_prealloc_samples: 0
+    obj_uncertainty:
+      sigma_obj_trans_x: 0.001
+      sigma_obj_trans_y: 0.001
+      sigma_obj_trans_z: 0.001
+      sigma_obj_rot_x: 0.01
+      sigma_obj_rot_y: 0.01
+      sigma_obj_rot_z: 0.01
+      sigma_obj_scale: 0.00
+      sigma_obj_com: 0.01
+      num_prealloc_samples: 10
+    params_uncertainty:
+      sigma_friction_coef: 0.001
+      sigma_torque_scaling: 0.001
+      num_prealloc_samples: 0
+
+    # sampling params
+    num_quality_samples: 10
+    sampling_snapshot_rate: 1
+
+  robust_l2_ferrari_canny:
+    # required parameters
+    quality_method: ferrari_canny_L2
+    friction_coef: 0.6
+    num_cone_faces: 3
+    soft_fingers: 1
+    quality_type: robust_quasi_static
+    all_contacts_required: 1
+    check_approach: 0
+    vis: 0
+    
+    # optional deterministic parameters
+    torque_scaling: 100.0
+    wrench_norm_thresh: 0.001
+    wrench_regularizer: 0.0000000001
+
+    # PARAMS for robust grasp metrics
+    # uncertainty
+    grasp_uncertainty:
+      sigma_grasp_trans_x: 0.001
+      sigma_grasp_trans_y: 0.001
+      sigma_grasp_trans_z: 0.001
+      sigma_grasp_rot_x: 0.01
+      sigma_grasp_rot_y: 0.01
+      sigma_grasp_rot_z: 0.01
+      sigma_grasp_approach: 0.01
+      num_prealloc_samples: 0
+    obj_uncertainty:
+      sigma_obj_trans_x: 0.001
+      sigma_obj_trans_y: 0.001
+      sigma_obj_trans_z: 0.001
+      sigma_obj_rot_x: 0.01
+      sigma_obj_rot_y: 0.01
+      sigma_obj_rot_z: 0.01
+      sigma_obj_scale: 0.00
+      sigma_obj_com: 0.01
+      num_prealloc_samples: 100
+    params_uncertainty:
+      sigma_friction_coef: 0.001
+      sigma_torque_scaling: 0.001
+      num_prealloc_samples: 0
+
+    # sampling params
+    num_quality_samples: 100
+    sampling_snapshot_rate: 1
+
+    metric_thresh: 0.002
+    metric_pctile: 0.9
+    min_iters: 100000
+
+  robust_wrench_resistance:
+    # required parameters
+    quality_method: wrench_resistance
+    friction_coef: 0.5
+    num_cone_faces: 8
+    soft_fingers: 1
+    quality_type: robust_quasi_static
+    check_approach: False
+    all_contacts_required: 1    
+    
+    # optional deterministic parameters
+    torque_scaling: 1000.0
+    wrench_norm_thresh: 0.001
+    wrench_regularizer: 0.0000000001
+    
+    # PARAMS for robust grasp metrics
+    # uncertainty
+    grasp_uncertainty:
+      sigma_grasp_trans_x: 0.001
+      sigma_grasp_trans_y: 0.001
+      sigma_grasp_trans_z: 0.001
+      sigma_grasp_rot_x: 0.001
+      sigma_grasp_rot_y: 0.001
+      sigma_grasp_rot_z: 0.001
+      num_prealloc_samples: 0
+    obj_uncertainty:
+      sigma_obj_trans_x: 0.0025
+      sigma_obj_trans_y: 0.0025
+      sigma_obj_trans_z: 0.0025
+      sigma_obj_rot_x: 0.001
+      sigma_obj_rot_y: 0.001
+      sigma_obj_rot_z: 0.001
+      sigma_obj_scale: 0.00
+      num_prealloc_samples: 10
+    params_uncertainty:
+      sigma_friction_coef: 0.1
+      num_prealloc_samples: 0
+
+    # sampling params
+    num_quality_samples: 25
+    sampling_snapshot_rate: 10
+
+  robust_suction_wrench_resistance:
+    # required parameters
+    quality_method: suction_wrench_resistance
+    friction_coef: 0.5
+    soft_fingers: 1
+    quality_type: robust_quasi_static
+    max_approach_table_angle: 45 # in degrees
+    all_contacts_required: 1
+    check_approach: 0
+    vis: 0
+    vis_contact: 0
+    
+    # optional deterministic parameters
+    torque_scaling: 1000.0
+    wrench_norm_thresh: 0.001
+    wrench_regularizer: 0.0000000001
+
+    num_cone_faces: 3
+    num_force_components: 3
+    num_boundary_points: 32
+    max_struct_pct_incr: 0.1
+    max_flex_pct_incr: 0.1
+    max_cone_pct_incr: 0.1
+
+    material_limit: 0.005
+    vacuum_force: 250.0
+    
+    # PARAMS for robust grasp metrics
+    # uncertainty
+    grasp_uncertainty:
+      sigma_grasp_trans_x: 0.001
+      sigma_grasp_trans_y: 0.001
+      sigma_grasp_trans_z: 0.001
+      sigma_grasp_rot_x: 0.01
+      sigma_grasp_rot_y: 0.01
+      sigma_grasp_rot_z: 0.01
+      sigma_backup_dist: 0.001
+      sigma_penetration_dist: 0.001
+      sigma_grasp_approach: 0.01
+      num_prealloc_samples: 0
+    obj_uncertainty:
+      sigma_obj_trans_x: 0.001
+      sigma_obj_trans_y: 0.001
+      sigma_obj_trans_z: 0.001
+      sigma_obj_rot_x: 0.01
+      sigma_obj_rot_y: 0.01
+      sigma_obj_rot_z: 0.01
+      sigma_obj_scale: 0.00
+      sigma_obj_com: 0.0025
+      num_prealloc_samples: 10
+    params_uncertainty:
+      sigma_friction_coef: 0.001
+      sigma_torque_scaling: 0.001
+      sigma_target_wrench: 0.01
+      sigma_finger_radius: 0.001
+      num_prealloc_samples: 0
+
+    # sampling params
+    num_quality_samples: 10
+    sampling_snapshot_rate: 1
+
+  ferrari_canny:
+    quality_method: ferrari_canny_L1
+    friction_coef: 0.5
+    num_cone_faces: 8
+    soft_fingers: 1
+    quality_type: quasi_static    
+    check_approach: False
+    all_contacts_required: 1    
+
+    # optional deterministic parameters
+    torque_scaling: 100.0
+    wrench_norm_thresh: 0.001
+    wrench_regularizer: 0.0000000001
+ 
+  force_closure:
+    quality_method: force_closure
+    friction_coef: 0.5
+    num_cone_faces: 8
+    soft_fingers: 1
+    quality_type: quasi_static    
+    check_approach: False
+    all_contacts_required: 1    
+
+    # optional deterministic parameters
+    torque_scaling: 0.01
+    wrench_norm_thresh: 0.001
+    wrench_regularizer: 0.0000000001
+
+  robust_force_closure:
+    # required parameters
+    quality_method: force_closure
+    friction_coef: 0.5
+    num_cone_faces: 8
+    soft_fingers: 1
+    quality_type: robust_quasi_static
+    check_approach: False
+    all_contacts_required: 1    
+    
+    # optional deterministic parameters
+    torque_scaling: 0.01
+    wrench_norm_thresh: 0.001
+    wrench_regularizer: 0.0000000001
+    
+    # PARAMS for robust grasp metrics
+    # uncertainty
+    grasp_uncertainty:
+      sigma_grasp_trans_x: 0.005
+      sigma_grasp_trans_y: 0.005
+      sigma_grasp_trans_z: 0.005
+      sigma_grasp_rot_x: 0.001
+      sigma_grasp_rot_y: 0.001
+      sigma_grasp_rot_z: 0.001
+      num_prealloc_samples: 0
+    obj_uncertainty:
+      sigma_obj_trans_x: 0.01
+      sigma_obj_trans_y: 0.01
+      sigma_obj_trans_z: 0.01
+      sigma_obj_rot_x: 0.01
+      sigma_obj_rot_y: 0.01
+      sigma_obj_rot_z: 0.01
+      sigma_obj_scale: 0.00
+      num_prealloc_samples: 10
+    params_uncertainty:
+      sigma_friction_coef: 0.1
+      num_prealloc_samples: 0
+
+    # sampling params
+    num_quality_samples: 25
+    sampling_snapshot_rate: 10

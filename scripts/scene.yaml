@@ -1,0 +1,62 @@
+DATA:
+  classes: null
+  data_path: /home/ymxlzgy/Downloads/dataset
+  depth_augm:
+    clip: 0.005
+    gaussian_kernel: 0
+    sigma: 0.001
+  gripper_width: 0.08
+  input_normals: false
+  intrinsics: kinect_azure
+  labels:
+    bin_weights:
+    - 0.16652107
+    - 0.21488856
+    - 0.37031708
+    - 0.55618503
+    - 0.75124664
+    - 0.93943357
+    - 1.07824539
+    - 1.19423112
+    - 1.55731375
+    - 3.17161779
+    filter_z: true
+    k: 1
+    max_radius: 0.005
+    num_neg_contacts: 0
+    num_pos_contacts: 8000
+    offset_bins:
+    - 0
+    - 0.00794435329
+    - 0.0158887021
+    - 0.0238330509
+    - 0.0317773996
+    - 0.0397217484
+    - 0.0476660972
+    - 0.055610446
+    - 0.0635547948
+    - 0.0714991435
+    - 0.08
+    to_gpu: false
+    z_val: -0.1
+  ndataset_points: 20000
+  num_point: 2048
+  num_test_scenes: 1000
+  pc_augm:
+    clip: 0.005
+    occlusion_dropout_rate: 0.0
+    occlusion_nclusters: 0
+    sigma: 0.0
+  raw_num_points: 500000
+  scene_contacts_path: table_scene_stand_all
+  train_and_test: false
+  train_on_scenes: true
+  use_farthest_point: false
+  use_uniform_quaternions: false
+  view_sphere:
+    distance_range:
+    - 1.5
+    - 2.0
+    elevation:
+    - 30
+    - 150

@@ -135,7 +135,7 @@ def load_grasp_path(root_folder):
         [dict] -- dict of category-wise train/test object grasp files
     """
     split_dict = {}
-    split_paths = glob.glob(os.path.join(root_folder, 'grasp_f_d_t/*.h5'))
+    split_paths = glob.glob(os.path.join(root_folder, 'grasp/*.h5')) #need to change this name
     return split_paths
 
 
@@ -650,7 +650,7 @@ class PointCloudReader:
 
     Arguments:
         root_folder {str} -- acronym root folder
-        batch_size {int} -- number of rendered point clouds per-batch
+        batch_size {int} -- number of rendered point clouds per-batch default is 1
 
     Keyword Arguments:
         raw_num_points {int} -- Number of random/farthest point samples per scene (default: {20000})
@@ -889,38 +889,33 @@ class PointCloudReader:
         self.change_scene(obj_paths, mesh_scales, obj_trafos, visualize=False)
 
         batch_segmap, batch_obj_pcs = [], []
-        cam_pose_path = os.path.join(self._root_folder, 'cam_pose_all', '%06d'%(scene_idx))
+        cam_pose_path = os.path.join(self._root_folder, 'cam_pose_all', '%06d'%(scene_idx)) # camera pose files
         if not os.path.exists(cam_pose_path):
-            os.mkdir(cam_pose_path)
+            os.makedirs(cam_pose_path)
+
         for i in range(self._batch_size):
             # 0.005s camera1_pose opengl
-            pc_cam, pc_normals, camera1_pose, camera2_pose, depth1, depth2 = self.render_random_scene(estimate_normals = self._estimate_normals)
-
-            if return_segmap:
-                segmap, _, obj_pcs = self._renderer.render_labels(depth, obj_paths, mesh_scales, render_pc=True)
-                batch_obj_pcs.append(obj_pcs)
-                batch_segmap.append(segmap)
+            pc_cam, pc1_normals, pc2_normals, camera1_pose, camera2_pose, depth1, depth2 = self.render_random_scene(estimate_normals = self._estimate_normals)
 
             batch_pc[i,:,0:3] = pc_cam[:,:3]
             batch_depth1[i,:,:] = depth1
             batch_depth2[i,:,:] = depth2
+
+            # deprecated estimate_normals not supported
             if self._estimate_normals:
-                batch_pc[i,:,3:6] = pc_normals[:,:3]
+                batch_pc[i,:,3:6] = pc1_normals[:,:3]
+
             cam1_poses[i,:,:] = camera1_pose
             cam2_poses[i,:,:] = camera2_pose
 
             if save:
                 K = np.array([[self._renderer._fx,0,self._renderer._cx],[0,self._renderer._fy,self._renderer._cy],[0,0,1]])
                 data = {'K':K, 'camera1_pose':camera1_pose, 'camera2_pose':camera2_pose, 'scene_idx':scene_idx}
-                file_path = os.path.join(cam_pose_path, '{}_dual_opengl.npz'.format(str(i)))
+                file_path = os.path.join(cam_pose_path, '{}_dual_opengl.npz'.format(str(i))) # info files
                 np.savez(file_path, **data)
-        if return_segmap:
-            data.update(segmap=segmap)
 
-        if return_segmap:
-            return batch_pc, depth1, cam1_poses, cam2_poses, scene_idx, batch_segmap, batch_obj_pcs
-        else:
-            return batch_pc, depth1, cam1_poses, cam2_poses, scene_idx
+
+        return batch_pc, batch_depth1, batch_depth2, cam1_poses, cam2_poses, scene_idx
 
     def render_random_scene(self, estimate_normals=False, camera_pose=None):
         """
@@ -931,7 +926,7 @@ class PointCloudReader:
             camera_pose {[type]} -- camera pose to render the scene from. (default: {None})
 
         Returns:
-            [pc, pc_normals, camera_pose, depth] -- [point cloud, point cloud normals, camera pose, depth]
+            [pc, pc_normals, camera1_pose, camera2_pose, depth1, depth2] -- [point cloud, point cloud normals, camera1 pose, camera2 pose, depth1, depth2]
         """
         if camera_pose is None:
             viewing_index = np.random.randint(0, high=len(self._cam1_orientations))
@@ -968,17 +963,15 @@ class PointCloudReader:
         in_camera2_pose[:3,1] = -in_camera2_pose[:3,1]
         in_camera2_pose[:3,2] = -in_camera2_pose[:3,2]
 
-        # in_camera1_pose is T_w_cam1 / in_camera2_pose is T_w_cam2
-        # rel_cam_pose is T_cam1_cam2
         rel_cam_pose = np.matmul(inverse_transform(in_camera1_pose), in_camera2_pose)
 
 
 
-        pc = np.concatenate((pc1, (np.matmul(rel_cam_pose[:3, :3], pc2.T) + rel_cam_pose[:3, 3].reshape(3,-1)).T), axis=0)
+        pc = np.concatenate((pc1, (np.matmul(rel_cam_pose[:3, :3], pc2.T) + rel_cam_pose[:3, 3].reshape(3,-1)).T), axis=0) # pc_all
 
 
 
-        return pc, pc1_normals, camera1_pose, camera2_pose, depth1, depth2
+        return pc, pc1_normals, pc2_normals, camera1_pose, camera2_pose, depth1, depth2
 
     def change_object(self, cad_path, cad_scale):
         """
@@ -1128,6 +1121,7 @@ class TableScene(Scene):
         Args:
             obj_mesh (trimesh.Trimesh): Object mesh to be placed.
             max_iter (int): Maximum number of attempts to place to object randomly.
+            stand: whether let the object "stand" on the table
 
         Raises:
             RuntimeError: In case the support object(s) do not provide any support surfaces.
@@ -1233,20 +1227,19 @@ class TableScene(Scene):
             grasp_path {str} -- acronym grasp path
 
         Returns:
-            [np.ndarray, np.ndarray] -- Mx4x4 grasp transforms, Mx3 grasp contacts
+            [np.ndarray, np.ndarray, np.ndarray, np.ndarray] -- successful grasps (all of them), For measures, Tor measures, Dex measures.
         """
         grasp_info = h5py.File(grasp_path, "r")
 
-        suc_grasps = np.array(grasp_info["grasps/qualities/object_in_gripper"])
         gt_grasps = np.array(grasp_info["grasps/transforms"])
         Force_closure = np.array(grasp_info["/grasps/qualities/Force_closure"])
         Torque_optimization = np.array(grasp_info["grasps/qualities/Torque_optimization"])
         Dexterity = np.array(grasp_info["grasps/qualities/Dexterity"])
 
-        suc_gt_grasps = gt_grasps[np.where(suc_grasps>0)[0]]
-        For_gt_grasps = Force_closure[np.where(suc_grasps>0)[0]]
-        Tor_gt_grasps = Torque_optimization[np.where(suc_grasps>0)[0]]
-        Dex_gt_grasps = Dexterity[np.where(suc_grasps>0)[0]]
+        suc_gt_grasps = gt_grasps
+        For_gt_grasps = Force_closure
+        Tor_gt_grasps = Torque_optimization
+        Dex_gt_grasps = Dexterity
 
         return suc_gt_grasps, For_gt_grasps, Tor_gt_grasps, Dex_gt_grasps
 
@@ -1267,8 +1260,10 @@ class TableScene(Scene):
 
         Arguments:
             output_dir {str} -- absolute output directory
-            scene_filtered_grasps {np.ndarray} -- Nx4x4 filtered scene grasps
-            scene_filtered_contacts {np.ndarray} -- Nx2x3 filtered scene contacts
+            scene_filtered_grasps {np.ndarray} -- Nx2x4x4 filtered scene grasps
+            scene_fors {np.ndarray} -- Nx1 filtered for measures
+            scene_tors {np.ndarray} -- Nx1 filtered tor measures
+            scene_dexs {np.ndarray} -- Nx1 filtered dex measures
             obj_paths {list} -- list of object paths in scene
             obj_transforms {list} -- list of object transforms in scene
             obj_scales {list} -- list of object scales in scene
@@ -1315,12 +1310,11 @@ class TableScene(Scene):
         Transform grasps and contacts into given object transform
 
         Arguments:
-            grasps {np.ndarray} -- Nx4x4 grasps
-            contacts {np.ndarray} -- 2Nx3 contacts
+            grasps {np.ndarray} -- Nx2x4x4 grasps
             obj_transform {np.ndarray} -- 4x4 mesh pose
 
         Returns:
-            [np.ndarray, np.ndarray] -- transformed grasps and contacts
+            [np.ndarray, np.ndarray] -- transformed grasps
         """
         print(obj_transform.shape, grasps.shape)
         transformed_grasps = np.matmul(obj_transform, grasps)
@@ -1328,35 +1322,18 @@ class TableScene(Scene):
 
         return transformed_grasps
 
-    def _filter_colliding_grasps(self, transformed_grasps, transformed_contacts):
-        """
-        Filter out colliding grasps
-
-        Arguments:
-            transformed_grasps {np.ndarray} -- Nx4x4 grasps
-            transformed_contacts {np.ndarray} -- 2Nx3 contact points
-
-        Returns:
-            [np.ndarray, np.ndarray] -- Mx4x4 filtered grasps, Mx2x3 filtered contact points
-        """
-        filtered_grasps = []
-        filtered_contacts = []
-        for i,g in enumerate(transformed_grasps):
-            if not self.is_colliding(self.gripper_mesh, g):
-                filtered_grasps.append(g)
-                filtered_contacts.append(transformed_contacts[2*i:2*(i+1)])
-        return np.array(filtered_grasps).reshape(-1,4,4), np.array(filtered_contacts).reshape(-1,2,3)
-
     def _filter_colliding_dual_grasps(self, transformed_grasps, For, tor, dex):
         """
         Filter out colliding grasps
 
         Arguments:
-            transformed_grasps {np.ndarray} -- Nx4x4 grasps
-            transformed_contacts {np.ndarray} -- 2Nx3 contact points
+            transformed_grasps {np.ndarray} -- Nx2x4x4 grasps
+            For {np.ndarray} -- Nx1 measures
+            Tor {np.ndarray} -- Nx1 measures
+            Dex {np.ndarray} -- Nx1 measures
 
         Returns:
-            [np.ndarray, np.ndarray] -- Mx4x4 filtered grasps, Mx2x3 filtered contact points
+            [np.ndarray, np.ndarray, np.ndarray, np.ndarray] -- Mx2x4x4 filtered grasps, Mx1 For,  Mx1 Tor,  Mx1 Dex
         """
         filtered_grasps = []
         filtered_fors = []
@@ -1427,8 +1404,8 @@ class TableScene(Scene):
             time_out {int} -- maximum time to try placing an object (default: {8})
 
         Returns:
-            [np.ndarray, np.ndarray, list, list, list, list] --
-            scene_filtered_grasps, scene_filtered_contacts, obj_paths, obj_transforms, obj_scales, obj_grasp_idcs
+            [np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list, list, list] --
+            scene_filtered_grasps, scene_filtered_fors, scene_filtered_tors, scene_filtered_dexs, obj_paths, obj_transforms, obj_scales, obj_grasp_idcs
 
         """
 
@@ -1454,8 +1431,8 @@ class TableScene(Scene):
             signal.alarm(0)
             if success:
                 self.add_object(random_grasp_path, obj_mesh, placement_T)
-                obj_scales.append(float(random_grasp_path.split('_')[-1].split('.h5')[0]))
-                obj_paths.append(os.path.join('simplified', '/'.join(random_grasp_path.split('/')[-1].split('_')[:1]) + '.obj'))
+                obj_scales.append(float(random_grasp_path.split('_')[-1].split('.h5')[0])) # scales
+                obj_paths.append(os.path.join('simplified', '/'.join(random_grasp_path.split('/')[-1].split('_')[:1]) + '.obj')) # mesh files
                 obj_transforms.append(placement_T)
                 grasp_paths.append(random_grasp_path)
             else:
@@ -1473,6 +1450,8 @@ class TableScene(Scene):
 
         for obj_transform, grasp_path in zip(obj_transforms, grasp_paths):
             grasps, For, Tor, Dex = self.load_suc_obj_dual_grasps(grasp_path)
+            if not grasps.shape[0]:
+                continue
             transformed_grasps = self._transform_dual_grasps(grasps, obj_transform)
             filtered_grasps, filtered_fors, filtered_tors, filtered_dexs = self._filter_colliding_dual_grasps(transformed_grasps, For, Tor, Dex)
 
@@ -1559,19 +1538,20 @@ class TableScene(Scene):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Grasp data reader")
-    parser.add_argument('root_folder', help='Root dir with grasps, meshes, mesh_contacts and splits', type=str)
+    parser.add_argument('root_folder', help='Root dir with grasps, meshes and splits', type=str)
     parser.add_argument('--num_grasp_scenes', type=int, default=10000)
     parser.add_argument('--splits','--list', nargs='+')
     parser.add_argument('--max_iterations', type=int, default=100)
-    parser.add_argument('--gripper_path', type=str, default='scripts/grippers/robotiq_85/gripper.obj')
-    parser.add_argument('--config_path', type=str, default='scripts/scene.yaml')
+    parser.add_argument('--gripper_path', type=str, default='scripts/grippers/robotiq_85/gripper.obj',help='gripper file')
+    parser.add_argument('--config_path', type=str, default='./scene.yaml')
     parser.add_argument('--min_num_objects', type=int, default=1)
     parser.add_argument('--max_num_objects', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=1,help=' number of views')
     parser.add_argument('--start_index', type=int, default=0)
-    parser.add_argument('--load_existing', type=str, default=None)
+    parser.add_argument('--load_existing', type=str, default=None,help=' all / number of the scene ')
     parser.add_argument('--grasps_used', type=str, default='grasp_used')
     parser.add_argument('--output_dir', type=str, default='table_scene_stand_all')
-    parser.add_argument('-vis', action='store_true', default=False)
+    parser.add_argument('--vis', action='store_true', default=False)
     args = parser.parse_args()
 
     root_folder = args.root_folder
@@ -1595,14 +1575,23 @@ if __name__ == "__main__":
 
     print('Root folder', args.root_folder)
     output_dir = os.path.join(root_folder, output_dir)
-    path = glob.glob(os.path.join(load_existing)) if load_existing else []
+    if load_existing == "all":
+        path = glob.glob(os.path.join(root_folder, args.output_dir, "*.npz"))
+        path.sort()
+    elif load_existing:
+        path = glob.glob(os.path.join(root_folder, args.output_dir, "{}.npz".format(load_existing.zfill(6))))
+    else:
+        path = []
     i = 0
 
     while table_scene._scene_count < number_of_scenes or i < len(path):
-
+        if load_existing is not None:
+            if i >= len(path):
+                break
         table_scene.reset()
 
         if load_existing is None:
+            # generating new scenes
             print('generating %s/%s' % (table_scene._scene_count, number_of_scenes))
             num_objects = np.random.randint(min_num_objects,max_num_objects+1)
             scene_grasps, scene_fors, scene_tors, scene_dexs, obj_paths, obj_transforms, obj_scales, obj_grasp_idcs = table_scene.arrange(num_objects, max_iterations)
@@ -1612,16 +1601,16 @@ if __name__ == "__main__":
                 else:
                     continue
         else:
-
+            # load old scenes
             scene_grasps, obj_paths, obj_transforms, obj_scales = table_scene.load_existing_scene(path[i])
 
 
         with open(config_path,'r') as f:
-            global_config = yaml.load(f)
+            global_config = yaml.safe_load(f)
 
         pcreader = PointCloudReader(
             root_folder=global_config['DATA']['data_path'],
-            batch_size=10,
+            batch_size=args.batch_size,
             estimate_normals=global_config['DATA']['input_normals'],
             raw_num_points=global_config['DATA']['raw_num_points'],
             use_uniform_quaternions = global_config['DATA']['use_uniform_quaternions'],
@@ -1638,15 +1627,14 @@ if __name__ == "__main__":
             depth_augm_config=global_config['DATA']['depth_augm']
         )
 
-        batch_data, depth, cam1_poses, cam2_poses, scene_idx = pcreader.get_scene(scene_idx=table_scene._scene_count-1) if load_existing is None else pcreader.get_scene(scene_idx=int(path[i].split('/')[-1].split('.npz')[0]))
+        batch_data, batch_depth1, batch_depth2, cam1_poses, cam2_poses, scene_idx = pcreader.get_scene(scene_idx=table_scene._scene_count-1) if load_existing is None else pcreader.get_scene(scene_idx=int(path[i].split('/')[-1].split('.npz')[0]))
 
         # OpenCV OpenGL conversion
         cam1_poses, cam1_poses_inv, batch_data = center_pc_convert_cam(cam1_poses, batch_data)
         cam2_poses, cam2_poses_inv, batch_data = center_pc_convert_cam(cam2_poses, batch_data)
-        # npy_fname = os.path.join(root_folder, 'pc_two_view_dex', '{}.npy'.format(path[i].split('/')[-1].split('.npz')[0])) if load_existing else os.path.join(root_folder, 'pc_two_view_dex', '%06d.npy'%(table_scene._scene_count-1))
         npy_fname = os.path.join(root_folder, 'pc_two_view_all', path[i].split('/')[-1].split('.npz')[0]) if load_existing else os.path.join(root_folder, 'pc_two_view_all', '%06d'%(table_scene._scene_count-1))
         if not os.path.exists(npy_fname):
-            os.mkdir(npy_fname)
+            os.makedirs(npy_fname)
         for x in range(len(batch_data)):
             pc_path = os.path.join(npy_fname, '{}.npy'.format(str(x)))
             np.save(pc_path, batch_data[x, :, :3])
@@ -1654,6 +1642,7 @@ if __name__ == "__main__":
 
         if visualize:
             for cam1_pose, cam2_pose in zip(cam1_poses, cam2_poses):
+                # show point cloud
                 mlab.figure(bgcolor=(1,1,1))
                 mlab.points3d(0, 0, 0, scale_factor=0.5, color=(1,0,0))
                 mlab.points3d(batch_data[0][:,0], batch_data[0][:,1], batch_data[0][:,2], scale_factor=0.05, color=(1,0,0))
@@ -1661,7 +1650,7 @@ if __name__ == "__main__":
 
                 # plot everything except point cloud
                 f, axarr = plt.subplots(1, 1)
-                im = axarr.imshow(depth)
+                im = axarr.imshow(batch_depth1[0,:,:])
                 f.colorbar(im, ax=axarr)
                 plt.show()
 

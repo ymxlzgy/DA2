@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+test_tmp/
+grasp/
+grasp2/
 # C extensions
 *.so
 
