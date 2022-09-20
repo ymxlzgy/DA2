@@ -10,8 +10,7 @@ import multiprocessing as mp
 
 config_filename ="../api_config.yaml"
 file_dir = "/home/ymxlzgy/Downloads/dataset/simplified"
-grasp_dir = "../grasp"
-grasp_dir2 = "../grasp2"
+grasp_dir = "../grasp/"
 # turn relative paths absolute
 if not os.path.isabs(config_filename):
     config_filename = os.path.join(os.getcwd(), config_filename)
@@ -38,7 +37,7 @@ def generate_pose(num, file):
     print("Deal with {}".format(OBJ_FILENAME), "Process {}".format(str(num)))
     scale, f, d, t, g, gripper = mesh_antipodal_grasp_sampler(file)
     g=np.array(g)
-    data = h5py.File(grasp_dir2 + OBJ_FILENAME.split('.')[0].split('/')[-1] + '_{}'.format(scale) + '.h5', 'w')
+    data = h5py.File(grasp_dir + OBJ_FILENAME.split('.')[0].split('/')[-1] + '_{}'.format(scale) + '.h5', 'w')
     temp1 = data.create_group("grasps")
     temp1["axis"] = [(g[i][0].axis, g[i][1].axis) for i in range(len(g))]
     temp1["angle"] = [(g[i][0].approach_angle, g[i][1].approach_angle) for i in range(len(g))]

@@ -15,12 +15,14 @@ python posetest.py
 ```
 The generated grasp pairs will be saved under `test_tmp`.
 ## Whole dataset generation
-Need to modify the path `file_dir` to customized mesh path, `grasp_dir` to grasps wish to be saved, `grasp_dir2` to generated grasp path.
+Need to modify `file_dir` to the customized mesh path.
 
-"Note: `grasp_dir2` is the path that script will save grasp pairs at. In case that the generation process is interrupted, you can copy these files to `grasp_dir` and delete the files under `grasp_dir2`. The new generation will skip the files under `grasp_dir`."
+"Note: `grasp_dir2` is the path that script will save grasp pairs at. 
 ```
 python generate_dual_dataset.py
 ```
+The generated grasp pairs will be stored under `grasp2`. 
+In case that the generation process is interrupted, you can copy these files to `grasp` and delete the files under `grasp2`. The new generation will skip the files under `grasp`.
 `generate_dual_dataset2.py` is used for a parallel generation. If use this script, you need to modify the `len(file_list)` in `generate_dual_dataset.py` to a customized number.
 ## Visualize
 To visualize the mesh with accompanying grasp pairs, run:
