@@ -1,0 +1,14 @@
+networkx
+scipy
+h5py
+numpy
+Pillow
+scikit-image
+scikit-learn
+six
+trimesh
+pandas
+numba
+autolab-core
+autolab-perception
+

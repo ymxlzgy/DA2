@@ -5,7 +5,7 @@ __pycache__/
 
 test_tmp/
 grasp/
-grasp2/
+meshpy_test/
 # C extensions
 *.so
 
