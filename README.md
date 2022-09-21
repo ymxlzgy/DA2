@@ -9,6 +9,7 @@ conda create -n DA2 python=3.8
 conda activate DA2
 git clone https://github.com/ymxlzgy/DA2.git
 cd path/to/DA2
+mkdir grasp test_tmp
 pip install -r requirements.txt
 ```
 ### Meshpy installation
