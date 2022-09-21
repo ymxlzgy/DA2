@@ -361,29 +361,6 @@ def load_mesh(filename, mesh_root_dir, scale=None):
 
     return obj_mesh
 
-
-def load_grasps(filename):
-    """Load transformations and qualities of grasps from a JSON file from the dataset.
-
-    Args:
-        filename (str): HDF5 or JSON file name.
-
-    Returns:
-        np.ndarray: Homogenous matrices describing the grasp poses. 2000 x 4 x 4.
-        np.ndarray: List of binary values indicating grasp success in simulation.
-    """
-    if filename.endswith(".json"):
-        data = json.load(open(filename, "r"))
-        T = np.array(data["transforms"])
-        success = np.array(data["quality_flex_object_in_gripper"])
-    elif filename.endswith(".h5"):
-        data = h5py.File(filename, "r")
-        T = np.array(data["grasps/transforms"])
-        success = np.array(data["grasps/qualities/flex/object_in_gripper"])
-    else:
-        raise RuntimeError("Unknown file ending:", filename)
-    return T, success
-
 def load_dual_grasps(filename):
     """Load transformations and qualities of grasps from a JSON file from the dataset.
 
@@ -394,22 +371,14 @@ def load_dual_grasps(filename):
         np.ndarray: Homogenous matrices describing the grasp poses. 2000 x 4 x 4.
         np.ndarray: List of binary values indicating grasp success in simulation.
     """
-    if filename.endswith(".json"):
-        data = json.load(open(filename, "r"))
-        T = np.array(data["transforms"])
-        success = np.array(data["quality_flex_object_in_gripper"])
-    elif filename.endswith(".h5"):
-        data = h5py.File(filename, "r")
-        T = np.array(data["grasps/transforms"])
-        success = np.array(data["grasps/qualities/object_in_gripper"])
-        # q = np.array(data["grasps/qualities/gazebo/physical_qualities"])
-        f = np.array(data["grasps/qualities/Force_closure"])
-        d = np.array(data["grasps/qualities/Dexterity"])
-        t = np.array(data["grasps/qualities/Torque_optimization"])
-        G = np.array(data["grasps/qualities/Grasp_matrix"])
-    else:
-        raise RuntimeError("Unknown file ending:", filename)
-    return T, success, f, d, t, G
+    data = h5py.File(filename, "r")
+    T = np.array(data["grasps/transforms"])
+    # q = np.array(data["grasps/qualities/gazebo/physical_qualities"])
+    f = np.array(data["grasps/qualities/Force_closure"])
+    d = np.array(data["grasps/qualities/Dexterity"])
+    t = np.array(data["grasps/qualities/Torque_optimization"])
+
+    return T, f, d, t
 
 
 def create_gripper_marker(color=[0, 0, 255], tube_radius=0.001, sections=6):

@@ -58,7 +58,7 @@ def main(argv=sys.argv[1:]):
         # load object mesh
         obj_mesh = load_mesh(f, mesh_root_dir=args.mesh_root)
 
-        T, success, f, d, t, G = load_dual_grasps(f)
+        T, f, d, t = load_dual_grasps(f)
         if args.metric == 'for':
             metric = f
         elif args.metric == 'dex':
@@ -69,11 +69,11 @@ def main(argv=sys.argv[1:]):
         if T.size == 0:
             obj_mesh.show()
         elif args.num_grasps == 1:
-            t = T[np.random.choice(np.where((success == 1) & (metric >= args.quality))[0], 1)]
+            t = T[np.random.choice(np.where((metric >= args.quality))[0], 1)]
             trimesh.Scene([obj_mesh] + [create_robotiq_marker(color=[255, 0, 0]).apply_transform(t[0][0])] + [create_robotiq_marker(color=[255, 0, 0]).apply_transform(t[0][1])]).show()
         else:
-            print(np.where((success == 1) & (metric >= args.quality))[0])
-            for i, (t1, t2) in enumerate(T[np.random.choice(np.where((success == 1) & (metric >= args.quality))[0], args.num_grasps) if len(np.where((success == 1) & (metric >= args.quality))[0]) > args.num_grasps else np.where((success == 1) & (metric >= args.quality))[0]]):
+            print(np.where( (metric >= args.quality))[0])
+            for i, (t1, t2) in enumerate(T[np.random.choice(np.where( (metric >= args.quality))[0], args.num_grasps) if len(np.where( (metric >= args.quality))[0]) > args.num_grasps else np.where( (metric >= args.quality))[0]]):
 
                 current_t1 = countX(database, t1)
                 current_t2 = countX(database, t2)

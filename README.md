@@ -1,6 +1,6 @@
 # DA<sup>2</sup> Dataset: Toward Dexterity-Aware Dual-Arm Grasping
 
-The project website is https://sites.google.com/view/da2dataset. This repo contains the code for DA<sup>2</sup> dataset generation and some scripts that can visualize grasp pairs and render virtual scenes. Still under construction. The paper is available [here](https://arxiv.org/pdf/2208.00408.pdf).
+The project website is https://sites.google.com/view/da2dataset. This repo contains the code for DA<sup>2</sup> dataset generation and some scripts that can visualize grasp pairs and render virtual scenes. The paper is available [here](https://arxiv.org/pdf/2208.00408.pdf).
 
 ## Installation
 ### Basic installation
@@ -25,6 +25,10 @@ pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f htt
 ```
 conda install mayavi -c conda-forge
 ```
+
+## Mesh Download
+Download meshes [here](https://drive.google.com/file/d/1sc9gTAmkb2VDfn4XJqgpObZW1ZXYckRw/view). After download, unzip them under `path/to/DA2` make it like `path/to/DA2/simplified`.
+
 ## Toy generation
 This is used to individual generation. Need to modify the path  ``OBJ_FILENAME`` inside ``posetest.py`` to your customized path, and run:
 ```
@@ -57,7 +61,7 @@ After download or generating the dataset, run:
 cd path/to/DA2/scripts
 python render_point_dex.py path/to/dataset
 ```
-You may need to change the path under the function **load_grasp_path** to a customized defined path.
+`path/to/dataset` in our case is `path/to/DA2`. You may need to change the path under the function **load_grasp_path** to a customized defined path.
 The generated scenes will be under ``path/to/dataset/table_scene_stand_all``. Simulated point clouds will be under ``path/to/dataset/pc_two_view_all``, Virtual camera info will be under ``path/to/dataset/cam_pose_all``. 
 
 
