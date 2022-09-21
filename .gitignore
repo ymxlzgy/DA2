@@ -3,8 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-test_tmp/
-grasp/
 meshpy_test/
 # C extensions
 *.so
