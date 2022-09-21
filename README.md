@@ -16,6 +16,11 @@ pip install -r requirements.txt
 cd path/to/DA2/meshpy
 python setup.py develop
 ```
+### Pytorch installation
+Please refer to [pytorch](https://pytorch.org/) official website to find the best version to your case, e.g.,:
+```
+pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+```
 ## Toy generation
 This is used to individual generation. Need to modify the path  ``OBJ_FILENAME`` inside ``posetest.py`` to your customized path, and run:
 ```
