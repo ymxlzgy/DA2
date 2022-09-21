@@ -1,6 +1,6 @@
 # DA<sup>2</sup> Dataset: Toward Dexterity-Aware Dual-Arm Grasping
 
-This repo will contain the code for dataset generation and some scripts that can visualize grasp pairs and render virtual scenes. Still under construction.
+The project website is https://sites.google.com/view/da2dataset. This repo contains the code for DA<sup>2</sup> dataset generation and some scripts that can visualize grasp pairs and render virtual scenes. Still under construction. The paper is available [here](https://arxiv.org/pdf/2208.00408.pdf).
 
 ## Installation
 ### Basic installation
@@ -17,9 +17,13 @@ cd path/to/DA2/meshpy
 python setup.py develop
 ```
 ### Pytorch installation
-Please refer to [pytorch](https://pytorch.org/) official website to find the best version to your case, e.g.,:
+Please refer to [pytorch](https://pytorch.org/) official website to find the best version in your case, e.g.,:
 ```
 pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+```
+### Mayavi installation
+```
+conda install mayavi -c conda-forge
 ```
 ## Toy generation
 This is used to individual generation. Need to modify the path  ``OBJ_FILENAME`` inside ``posetest.py`` to your customized path, and run:
@@ -64,7 +68,9 @@ If you want to visualize the generated scenes, run:
 python render_point_dex.py path/to/dataset --load_existing number_of_the_scene --vis
 ```
 ## Acknowledgement
-This work is based on Dex-Net, Acronym, and Contact-GraspNet.
+This work is based on [Dex-Net](https://github.com/BerkeleyAutomation/dex-net), [Acronym](https://github.com/NVlabs/acronym), [Contact-GraspNet](https://github.com/NVlabs/contact_graspnet), and [diverse-and-stable-grasp](https://github.com/tengyu-liu/diverse-and-stable-grasp).
+
+Many functions under [dexnet](https://github.com/ymxlzgy/DA2/tree/main/dexnet) are from [Dex-Net](https://github.com/BerkeleyAutomation/dex-net). Didn't remove them in case anyone can notice them and may facilitate one's research.
 
 If you think this repo can help your research, please consider citing:
 ```javascript
