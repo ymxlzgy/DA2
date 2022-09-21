@@ -40,13 +40,11 @@ The generated grasp pairs will be saved under `test_tmp`.
 ## Whole dataset generation
 Need to modify `file_dir` to the customized mesh path.
 
-"Note: `grasp_dir2` is the path that script will save grasp pairs at. 
 ```
 cd path/to/DA2/scripts
 python generate_dual_dataset.py
 ```
-The generated grasp pairs will be stored under `grasp2`. 
-In case that the generation process is interrupted, you can copy these files to `grasp` and delete the files under `grasp2`. The new generation will skip the files under `grasp`.
+The generated grasp pairs will be stored under `grasp`. 
 `generate_dual_dataset2.py` is used for a parallel generation. If use this script, you need to modify the `len(file_list)` in `generate_dual_dataset.py` to a customized number.
 ## Visualize
 To visualize the mesh with accompanying grasp pairs, run:
@@ -78,7 +76,7 @@ This work is based on [Dex-Net](https://github.com/BerkeleyAutomation/dex-net), 
 Many functions under [dexnet](https://github.com/ymxlzgy/DA2/tree/main/dexnet) are from [Dex-Net](https://github.com/BerkeleyAutomation/dex-net). Didn't remove them in case anyone can notice them and may facilitate one's research.
 
 If you think this repo can help your research, please consider citing:
-```javascript
+```
 @article{da2dataset,
   author={Zhai, Guangyao and Zheng, Yu and Xu, Ziwei and Kong, Xin and Liu, Yong and Busam, Benjamin and Ren, Yi and Navab, Nassir and Zhang, Zhengyou},
   journal={IEEE Robotics and Automation Letters},
